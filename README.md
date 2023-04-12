@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 ## Hola! Bienvenido a la herramienta para la detección rápida de neumonía
 
 Deep Learning aplicado en el procesamiento de imágenes radiográficas de tórax en formato DICOM con el fin de clasificarlas en 3 categorías diferentes:
@@ -29,7 +27,9 @@ Requerimientos necesarios para el funcionamiento:
 
   conda activate tf
 
-  cd UAO-Neumonia
+  git clone https://isabella83tr@bitbucket.org/isabella83tr/codes.git
+
+  cd codes
 
   pip install -r requirements.txt
 
@@ -38,7 +38,7 @@ Requerimientos necesarios para el funcionamiento:
 Uso de la Interfaz Gráfica:
 
 - Ingrese la cédula del paciente en la caja de texto
-- Presione el botón 'Cargar Imagen', seleccione la imagen del explorador de archivos del computador (Imagenes de prueba en https://drive.google.com/drive/folders/1WOuL0wdVC6aojy8IfssHcqZ4Up14dy0g?usp=drive_link)
+- Presione el botón 'Cargar Imagen', seleccione la imagen del explorador de archivos del computador
 - Presione el botón 'Predecir' y espere unos segundos hasta que observe los resultados
 - Presione el botón 'Guardar' para almacenar la información del paciente en un archivo excel con extensión .csv
 - Presione el botón 'PDF' para descargar un archivo PDF con la información desplegada en la interfaz
@@ -46,7 +46,7 @@ Uso de la Interfaz Gráfica:
 
 ---
 
-## Arquitectura de archivos propuesta.
+## Explicación de los scripts
 
 ## detector_neumonia.py
 
@@ -105,11 +105,3 @@ Grad-CAM realiza el cálculo del gradiente de la salida correspondiente a la cla
 
 Isabella Torres Revelo - https://github.com/isa-tr
 Nicolas Diaz Salazar - https://github.com/nicolasdiazsalazar
-=======
-# UAO-Neumonia-Taller
-Alejandra Florez M - 2240644
->>>>>>> 6f324ce091c03ef8c6c6fded82c555da47e9e2ea
-=======
-
->>>>>>> 7bcd333d08173dc70b6c670f6331004ba5db2a41
-
