@@ -27,9 +27,7 @@ Requerimientos necesarios para el funcionamiento:
 
   conda activate tf
 
-  git clone https://isabella83tr@bitbucket.org/isabella83tr/codes.git
-
-  cd codes
+  cd UAO-Neumonia
 
   pip install -r requirements.txt
 
