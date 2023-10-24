@@ -44,7 +44,7 @@ Uso de la Interfaz Gráfica:
 
 ---
 
-## Explicación de los scripts
+## Arquitectura de archivos propuesta.
 
 ## detector_neumonia.py
 
