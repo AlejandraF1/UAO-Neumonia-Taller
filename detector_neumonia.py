@@ -3,7 +3,7 @@
 
 from tkinter import *
 from tkinter import ttk, font, filedialog, Entry
-
+from keras import backend as K
 from tkinter.messagebox import askokcancel, showinfo, WARNING
 import getpass
 from PIL import ImageTk, Image
@@ -21,10 +21,9 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import pydicom
 
-# Definir la función model_fun
 def model_fun():
-    # Código para cargar o crear el modelo aquí
-    pass
+    model = tf.keras.models.load_model('conv_MLP_84.h5')
+    return model
 
 # Definir la función preprocess
 def preprocess(array):
