@@ -5,7 +5,6 @@ from tkinter import *
 from tkinter import ttk, font, filedialog, Entry
 from keras import backend as K
 from tkinter.messagebox import askokcancel, showinfo, WARNING
-import getpass
 from PIL import ImageTk, Image
 import csv
 import pyautogui
@@ -25,10 +24,15 @@ def model_fun():
     model = tf.keras.models.load_model('conv_MLP_84.h5')
     return model
 
-# Definir la función preprocess
 def preprocess(array):
-    # Código para preprocesar la imagen aquí
-    pass
+    array = cv2.resize(array, (512, 512))
+    array = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
+    array = clahe.apply(array)
+    array = array / 255
+    array = np.expand_dims(array, axis=-1)
+    array = np.expand_dims(array, axis=0)
+    return array
 
 
 def grad_cam(array):
@@ -44,6 +48,8 @@ def grad_cam(array):
     pooled_grads_value, conv_layer_output_value = iterate(img)
     for filters in range(64):
         conv_layer_output_value[:, :, filters] *= pooled_grads_value[filters]
+    
+    
     # creating the heatmap
     heatmap = np.mean(conv_layer_output_value, axis=-1)
     heatmap = np.maximum(heatmap, 0)  # ReLU
