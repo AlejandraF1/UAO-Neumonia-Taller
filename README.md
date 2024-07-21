@@ -1,3 +1,5 @@
+Alejandra Florez 
+2240644
 ## Hola! Bienvenido a la herramienta para la detección rápida de neumonía
 
 Deep Learning aplicado en el procesamiento de imágenes radiográficas de tórax en formato DICOM con el fin de clasificarlas en 3 categorías diferentes:
