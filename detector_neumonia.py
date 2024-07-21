@@ -16,6 +16,20 @@ import time
 tf.compat.v1.disable_eager_execution()
 tf.compat.v1.experimental.output_all_intermediates(True)
 import cv2
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import pydicom
+
+# Definir la función model_fun
+def model_fun():
+    # Código para cargar o crear el modelo aquí
+    pass
+
+# Definir la función preprocess
+def preprocess(array):
+    # Código para preprocesar la imagen aquí
+    pass
 
 
 def grad_cam(array):
