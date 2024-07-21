@@ -12,13 +12,14 @@ import tkcap
 import img2pdf
 import numpy as np
 import time
-tf.compat.v1.disable_eager_execution()
-tf.compat.v1.experimental.output_all_intermediates(True)
-import cv2
+import pydicom as dicom
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-import pydicom
+
+tf.compat.v1.disable_eager_execution()
+tf.compat.v1.experimental.output_all_intermediates(True)
+import cv2
 
 def model_fun():
     model = tf.keras.models.load_model('conv_MLP_84.h5')
