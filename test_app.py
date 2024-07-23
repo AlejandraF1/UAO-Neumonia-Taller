@@ -1,6 +1,8 @@
 import pytest
 import numpy as np
 from app import App, read_jpg_file, preprocess
+import sys
+sys.path.append('../')
 
 @pytest.fixture
 def app():
