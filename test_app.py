@@ -22,7 +22,7 @@ def test_run_model(detector, mocker):
     detector_neumonia.predict.assert_called_once_with(detector.array)  # verify predict was called with detector.array
 
 def test_save_results_csv(detector, mocker, tmp_path):
-    csv_file = tmp_path / 'esults.csv'
+    csv_file = tmp_path / 'results.csv'
     mocker.patch('csv.writer', return_value=mocker.Mock())
     detector.text1.insert(0, 'patient_id')
     detector.label = 'label'
