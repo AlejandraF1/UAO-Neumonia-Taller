@@ -53,11 +53,11 @@ class DetectorNeumonia:
             argmax = tf.argmax(preds[0])
             output = preds[:, argmax]
 
-        last_conv_layer = self.model.get_layer("conv10_thisone")
-        grads = tape.gradient(output, last_conv_layer.output)
+        last_conv_layer = self.model.get_layer("conv10_thisone").output
+        grads = tape.gradient(output, last_conv_layer)
         pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
         
-        iterate = K.function([self.model.input], [pooled_grads, last_conv_layer.output[0]])
+        iterate = tf.keras.backend.function([self.model.input], [pooled_grads, last_conv_layer])
         pooled_grads_value, conv_layer_output_value = iterate([img])
         
         for i in range(64):
