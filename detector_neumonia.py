@@ -33,8 +33,10 @@ class DetectorNeumonia:
         return model
 
     def preprocess(self, array):
+        if len(array.shape) == 3 and array.shape[2] == 3:
+            # Si la imagen tiene 3 canales, conviértela a escala de grises
+            array = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
         array = cv2.resize(array, (512, 512))
-        array = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
         array = clahe.apply(array)
         array = array / 255
