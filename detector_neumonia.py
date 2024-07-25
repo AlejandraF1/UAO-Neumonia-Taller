@@ -49,15 +49,14 @@ class DetectorNeumonia:
         img = self.preprocess(array)
 
         with tf.GradientTape() as tape:
-            preds = self.model(img, training=False)
+            preds = self.model(img)
             argmax = tf.argmax(preds[0])
             output = preds[:, argmax]
 
-        last_conv_layer = self.model.get_layer("conv10_thisone").output
-        grads = tape.gradient(output, last_conv_layer)
+        last_conv_layer = self.model.get_layer("conv10_thisone")
+        grads = tape.gradient(output, last_conv_layer.output)[0]
         pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-        
-        iterate = tf.keras.backend.function([self.model.input], [pooled_grads, last_conv_layer])
+        iterate = tf.keras.backend.function([self.model.input], [pooled_grads, last_conv_layer.output[0]])
         pooled_grads_value, conv_layer_output_value = iterate([img])
         
         for i in range(64):
@@ -69,14 +68,14 @@ class DetectorNeumonia:
         heatmap = cv2.resize(heatmap, (img.shape[2], img.shape[1]))
         heatmap = np.uint8(255 * heatmap)
         heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+        img2 = cv2.resize(array, (512, 512))
 
         img2 = cv2.resize(array, (512, 512))
         hif = 0.8
         transparency = heatmap * hif
         transparency = transparency.astype(np.uint8)
-        superimposed_img = cv2.add(transparency, img2)
-        superimposed_img = superimposed_img.astype(np.uint8)
-        self.heatmap = superimposed_img[:, :, ::-1]
+        superimposed_img = cv2.addWeighted(img2, 1-hif, transparency, hif, 0)
+        self.heatmap = superimposed_img
 
     def predict(self, array):
         batch_array_img = self.preprocess(array)
