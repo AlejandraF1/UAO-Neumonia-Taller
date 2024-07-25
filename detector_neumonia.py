@@ -45,17 +45,18 @@ class DetectorNeumonia:
         return array
     
     def grad_cam(self, array):
+        # Grad-CAM para resaltar características importantes
         img = self.preprocess(array)
         preds = self.model.predict(img)
         argmax = np.argmax(preds[0])
         output = self.model.output[:, argmax]
         last_conv_layer = self.model.get_layer("conv10_thisone")
-        grads = tf.keras.backend.gradients(output, last_conv_layer.output)[0]
-        pooled_grads = tf.keras.backend.mean(grads, axis=(0, 1, 2))
-        iterate = tf.keras.backend.function([self.model.input], [pooled_grads, last_conv_layer.output[0]])
-        pooled_grads_value, conv_layer_output_value = iterate(img)
-        for filters in range(64):
-            conv_layer_output_value[:, :, filters] *= pooled_grads_value[filters]
+        grads = K.gradients(output, last_conv_layer.output)[0]
+        pooled_grads = K.mean(grads, axis=(0, 1, 2))
+        iterate = K.function([self.model.input], [pooled_grads, last_conv_layer.output[0]])
+        pooled_grads_value, conv_layer_output_value = iterate([img])
+        for i in range(64):
+            conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
 
         heatmap = np.mean(conv_layer_output_value, axis=-1)
         heatmap = np.maximum(heatmap, 0)  # ReLU
@@ -83,10 +84,48 @@ class DetectorNeumonia:
             self.label = "viral"
         self.grad_cam(array)
 
+    def read_dicom_file(self, filepath):
+        # Lectura de archivo DICOM
+        ds = dicom.dcmread(filepath)
+        array = ds.pixel_array
+        img = Image.fromarray(array)
+        return array, img    
+
 class App:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Herramienta para la detección rápida de neumonía")
+        self.detector = DetectorNeumonia()
+
+    def load_img_file(self):
+        filepath = filedialog.askopenfilename(
+            initialdir="/",
+            title="Select image",
+            filetypes=(
+                ("DICOM", "*.dcm"),
+                ("JPEG", "*.jpeg"),
+                ("jpg files", "*.jpg"),
+                ("png files", "*.png"),
+            ),
+        )
+        if filepath:
+            array, img2show = self.detector.read_dicom_file(filepath)
+            # Mostrar la imagen img2show en la interfaz gráfica...
+            # Por ejemplo:
+            img2show = img2show.resize((250, 250), Image.ANTIALIAS)
+            img2show = ImageTk.PhotoImage(img2show)
+            # Actualizar el campo de texto o etiqueta donde quieres mostrar la imagen
+            self.text_img1.image_create(tk.END, image=img2show)
+            # Actualizar el atributo del detector con el array de la imagen
+            self.detector.array = array
+            # Habilitar el botón de predicción
+            self.button1["state"] = "enabled"
+
+    # Otros métodos de la clase App...
+
+if __name__ == "__main__":
+    my_app = App()
+    my_app.root.mainloop()    
 
         # BOLD FONT
         fonti = font.Font(weight="bold")
