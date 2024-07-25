@@ -17,7 +17,7 @@ import pydicom as dicom
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.models import load_model, model 
+from tensorflow.keras.models import load_model
 
 class DetectorNeumonia:
     def __init__(self):
