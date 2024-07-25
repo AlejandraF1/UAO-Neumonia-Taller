@@ -17,7 +17,7 @@ import pydicom as dicom
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.models import load_model
+from tensorflow.keras.models import load_model, model 
 
 class DetectorNeumonia:
     def __init__(self):
@@ -47,23 +47,29 @@ class DetectorNeumonia:
     def grad_cam(self, array):
         # Grad-CAM para resaltar características importantes
         img = self.preprocess(array)
-        preds = self.model.predict(img)
-        argmax = np.argmax(preds[0])
-        output = self.model.output[:, argmax]
+
+        with tf.GradientTape() as tape:
+            preds = self.model(img, training=False)
+            argmax = tf.argmax(preds[0])
+            output = preds[:, argmax]
+
         last_conv_layer = self.model.get_layer("conv10_thisone")
-        grads = K.gradients(output, last_conv_layer.output)[0]
-        pooled_grads = K.mean(grads, axis=(0, 1, 2))
+        grads = tape.gradient(output, last_conv_layer.output)
+        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+        
         iterate = K.function([self.model.input], [pooled_grads, last_conv_layer.output[0]])
         pooled_grads_value, conv_layer_output_value = iterate([img])
+        
         for i in range(64):
             conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
 
         heatmap = np.mean(conv_layer_output_value, axis=-1)
         heatmap = np.maximum(heatmap, 0)  # ReLU
         heatmap /= np.max(heatmap)  # normalize
-        heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[2]))
+        heatmap = cv2.resize(heatmap, (img.shape[2], img.shape[1]))
         heatmap = np.uint8(255 * heatmap)
         heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+
         img2 = cv2.resize(array, (512, 512))
         hif = 0.8
         transparency = heatmap * hif
