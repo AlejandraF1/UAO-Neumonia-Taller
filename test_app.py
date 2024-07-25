@@ -1,8 +1,11 @@
-
 import pytest
 import cv2
 import numpy as np
 from detector_neumonia import DetectorNeumonia
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+import tensorflow as tf
+
 
 @pytest.fixture
 def setup_detector():

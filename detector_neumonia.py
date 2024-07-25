@@ -42,7 +42,7 @@ class DetectorNeumonia:
         array = np.expand_dims(array, axis=-1)
         array = np.expand_dims(array, axis=0)
         return array
-
+    
     def grad_cam(self, array):
         img = self.preprocess(array)
         preds = self.model.predict(img)
@@ -214,7 +214,7 @@ class App:
         )
         if answer:
             self.text1.delete(0, "end")
-            self.text2.delete
+            self.text2.delete(0, "end")
 
 if __name__ == "__main__":
     my_app = App()
