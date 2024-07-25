@@ -179,7 +179,7 @@ class App:
         )
         if filepath:
             self.detector.array, img2show = self.detector.read_dicom_file(filepath)
-            img2show = img2show.resize((250, 250), Image.ANTIALIAS)
+            img2show = img2show.resize((250, 250), Image.BILINEAR)
             img2show = ImageTk.PhotoImage(img2show)
             self.text_img1.image_create(tk.END, image=img2show)
             self.button1["state"] = "enabled"
