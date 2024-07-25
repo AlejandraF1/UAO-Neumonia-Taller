@@ -187,18 +187,23 @@ class App:
         )
         if filepath:
             self.detector.array, img2show = self.detector.read_dicom_file(filepath)
+            img2show = Image.fromarray(self.detector.array)
             img2show = img2show.resize((250, 250), Image.BILINEAR)
             img2show = ImageTk.PhotoImage(img2show)
+            self.text_img1.delete(1.0, tk.END)  # Limpiar cualquier texto previo
             self.text_img1.image_create(tk.END, image=img2show)
-            self.button1["state"] = "enabled"
+            self.button1["state"] = "enabled"  # Activar botón de predicción
 
     def run_model(self):
         self.detector.predict(self.detector.array)
-        self.img2 = Image.fromarray(self.detector.heatmap)
-        self.img2 = self.img2.resize((250, 250), Image.ANTIALIAS)
-        self.img2 = ImageTk.PhotoImage(self.img2)
-        self.text_img2.image_create(tk.END, image=self.img2)
+        img_heatmap = Image.fromarray(self.detector.heatmap)
+        img_heatmap = img_heatmap.resize((250, 250), Image.ANTIALIAS)
+        img_heatmap = ImageTk.PhotoImage(img_heatmap)
+        self.text_img2.delete(1.0, tk.END)  # Limpiar cualquier texto previo
+        self.text_img2.image_create(tk.END, image=img_heatmap)
+        self.text2.delete(1.0, tk.END)  # Limpiar cualquier texto previo
         self.text2.insert(tk.END, self.detector.label)
+        self.text3.delete(1.0, tk.END)  # Limpiar cualquier texto previo
         self.text3.insert(tk.END, "{:.2f}".format(self.detector.proba) + "%")
 
     def save_results_csv(self):
@@ -226,7 +231,12 @@ class App:
         )
         if answer:
             self.text1.delete(0, "end")
-            self.text2.delete(0, "end")
+            self.text2.delete(1.0, tk.END)
+            self.text3.delete(1.0, tk.END)
+            self.text_img1.delete(1.0, tk.END)
+            self.text_img2.delete(1.0, tk.END)
+            self.detector.array = None
+            self.button1["state"] = "disabled"
             
 if __name__ == "__main__":
     my_app = App()
