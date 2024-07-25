@@ -6,6 +6,7 @@ from tkinter import ttk, font, filedialog, Entry
 from keras import backend as K
 from tkinter.messagebox import askokcancel, showinfo, WARNING
 from PIL import ImageTk, Image
+import tkinter as tk
 import csv
 import cv2
 import pyautogui
