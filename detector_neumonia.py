@@ -45,37 +45,47 @@ class DetectorNeumonia:
         return array
 
     def grad_cam(self, array):
-        # Grad-CAM para resaltar características importantes
-        img = self.preprocess(array)
-
-        with tf.GradientTape() as tape:
-            preds = self.model(img)
-            argmax = tf.argmax(preds[0])
-            output = preds[:, argmax]
-
-        last_conv_layer = self.model.get_layer("conv10_thisone")
+    # Preprocesar la imagen
+    img = self.preprocess(array)
+    
+    # Obtener el modelo y la última capa convolucional
+    last_conv_layer = self.model.get_layer("conv10_thisone")
+    with tf.GradientTape() as tape:
+        # Configura el tape para seguir el modelo y la salida
+        tape.watch(last_conv_layer.output)
+        preds = self.model(img)
+        class_idx = tf.argmax(preds[0])
+        output = preds[:, class_idx]
+    
+        # Calcula los gradientes
         grads = tape.gradient(output, last_conv_layer.output)[0]
-        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-        iterate = tf.keras.backend.function([self.model.input], [pooled_grads, last_conv_layer.output[0]])
-        pooled_grads_value, conv_layer_output_value = iterate([img])
-        
-        for i in range(64):
-            conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
-
-        heatmap = np.mean(conv_layer_output_value, axis=-1)
-        heatmap = np.maximum(heatmap, 0)  # ReLU
-        heatmap /= np.max(heatmap)  # normalize
-        heatmap = cv2.resize(heatmap, (img.shape[2], img.shape[1]))
-        heatmap = np.uint8(255 * heatmap)
-        heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
-        img2 = cv2.resize(array, (512, 512))
-
-        img2 = cv2.resize(array, (512, 512))
-        hif = 0.8
-        transparency = heatmap * hif
-        transparency = transparency.astype(np.uint8)
-        superimposed_img = cv2.addWeighted(img2, 1-hif, transparency, hif, 0)
-        self.heatmap = superimposed_img
+    
+    # Calcula los pesos de los gradientes
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    
+    # Obtiene el valor de los gradientes y la salida de la última capa convolucional
+    conv_layer_output_value = last_conv_layer.output.numpy()
+    pooled_grads_value = pooled_grads.numpy()
+    
+    # Multiplica la salida de la capa convolucional por los pesos de los gradientes
+    for i in range(pooled_grads_value.shape[-1]):
+        conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
+    
+    # Calcula el mapa de calor
+    heatmap = np.mean(conv_layer_output_value, axis=-1)
+    heatmap = np.maximum(heatmap, 0)  # ReLU
+    heatmap /= np.max(heatmap)  # Normaliza
+    heatmap = cv2.resize(heatmap, (img.shape[2], img.shape[1]))
+    heatmap = np.uint8(255 * heatmap)
+    heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+    
+    # Superpone el mapa de calor en la imagen original
+    img2 = cv2.resize(array, (512, 512))
+    hif = 0.8
+    transparency = heatmap * hif
+    transparency = transparency.astype(np.uint8)
+    superimposed_img = cv2.addWeighted(img2, 1-hif, transparency, hif, 0)
+    self.heatmap = superimposed_img
 
     def predict(self, array):
         batch_array_img = self.preprocess(array)
@@ -84,7 +94,7 @@ class DetectorNeumonia:
         if prediction == 0:
             self.label = "bacteriana"
         elif prediction == 1:
-            self.label = "normal"
+            self.label = "normal"0
         elif prediction == 2:
             self.label = "viral"
         self.grad_cam(array)
