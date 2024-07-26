@@ -70,7 +70,7 @@ class DetectorNeumonia:
 
     # Multiplica la salida de la capa convolucional por los pesos de los gradientes
         for i in range(pooled_grads_value.shape[-1]):
-        conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
+            conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
 
         # Calcula el mapa de calor
         heatmap = np.mean(conv_layer_output_value, axis=-1)
