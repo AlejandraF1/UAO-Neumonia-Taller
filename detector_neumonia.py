@@ -16,7 +16,7 @@ import time
 import pydicom as dicom
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers, models
 from tensorflow.keras.models import load_model
 
 class DetectorNeumonia:
@@ -45,49 +45,56 @@ class DetectorNeumonia:
         return array
 
     def grad_cam(self, array):
-    # Preprocesar la imagen
+        # Preprocesar la imagen
         img = self.preprocess(array)
-
-    # Obtener el modelo y la última capa convolucional
+        img = tf.convert_to_tensor(img) 
+    
+        # Obtener el modelo y la última capa convolucional
         last_conv_layer = self.model.get_layer("conv10_thisone")
+    
         with tf.GradientTape() as tape:
+            # Habilitar el seguimiento de la imagen para calcular los gradientes
+            tape.watch(img)
         
-            # Configura el tape para seguir el modelo y la salida
-            tape.watch(last_conv_layer.output)
+            # Realizar la predicción
             preds = self.model(img)
-            class_idx = tf.argmax(preds[0])
-            output = preds[:, class_idx]
+            argmax = tf.argmax(preds[0])  # Obtener el índice de la clase con mayor probabilidad
+            output = preds[:, argmax]  # Salida para esa clase
 
-            # Calcula los gradientes
-            grads = tape.gradient(output, last_conv_layer.output)[0]
+        # Calcular los gradientes
+        grads = tape.gradient(output, last_conv_layer.output)
+    
+        # Verificar si grads es None
+        if grads is None:
+            raise ValueError("Gradients are None, check the model and input.")
 
-    # Calcula los pesos de los gradientes
+        # Promedio de los gradientes
         pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    
+        # Obtener los valores de la capa convolucional
+        conv_layer_output_value = last_conv_layer.output[0] 
 
-    # Obtiene el valor de los gradientes y la salida de la última capa convolucional
-        conv_layer_output_value = last_conv_layer.output.numpy()
-        pooled_grads_value = pooled_grads.numpy()
+        # Multiplicar los valores de salida de la capa convolucional por los gradientes promediados
+        for i in range(conv_layer_output_value.shape[-1]):
+            conv_layer_output_value[:, :, i] *= pooled_grads[i]
+    
+        # Crear el mapa de calor
+        heatmap = tf.reduce_mean(conv_layer_output_value, axis=-1)
+        heatmap = tf.maximum(heatmap, 0)  # ReLU
+        heatmap /= tf.reduce_max(heatmap)  # Normalizar
 
-    # Multiplica la salida de la capa convolucional por los pesos de los gradientes
-        for i in range(pooled_grads_value.shape[-1]):
-            conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
-
-        # Calcula el mapa de calor
-        heatmap = np.mean(conv_layer_output_value, axis=-1)
-        heatmap = np.maximum(heatmap, 0)  # ReLU
-        heatmap /= np.max(heatmap)  # Normaliza
-        heatmap = cv2.resize(heatmap, (img.shape[2], img.shape[1]))
+        # Convertir a numpy para usar con OpenCV
+        heatmap = cv2.resize(heatmap.numpy(), (array.shape[1], array.shape[0]))  # Asegúrate de que coincide con la imagen
         heatmap = np.uint8(255 * heatmap)
         heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
-
-        # Superpone el mapa de calor en la imagen original
-        img2 = cv2.resize(array, (512, 512))
+    
+        # Superponer el mapa de calor en la imagen original
+        img2 = cv2.resize(array, (array.shape[1], array.shape[0]))  # Asegúrate de que coincide con la imagen
         hif = 0.8
-        transparency = heatmap * hif
-        transparency = transparency.astype(np.uint8)
-        superimposed_img = cv2.addWeighted(img2, 1 - hif, transparency, hif, 0)
+        superimposed_img = cv2.addWeighted(img2, 1 - hif, heatmap, hif, 0)  # Usar addWeighted para mezclar
         self.heatmap = superimposed_img
 
+        return superimposed_img[:, :, ::-1]  # Cambiar el orden de los canales de color si es necesario
 
     def predict(self, array):
         batch_array_img = self.preprocess(array)
@@ -96,7 +103,7 @@ class DetectorNeumonia:
         if prediction == 0:
             self.label = "bacteriana"
         elif prediction == 1:
-            self.label = "normal"0
+            self.label = "normal"
         elif prediction == 2:
             self.label = "viral"
         self.grad_cam(array)
